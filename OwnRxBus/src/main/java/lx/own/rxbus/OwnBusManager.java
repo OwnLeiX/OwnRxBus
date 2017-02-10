@@ -107,7 +107,7 @@ public class OwnBusManager {
 
     public <T> Subscription subscribe(String tag, Class<T> eventType, OwnBusStation<T> station, OwnBusAccident accidentReceiver, int scheduler) {
         checkNull(tag,eventType,station);
-        return add(setScheduler(OwnRxBus.$().toObservable(eventType), scheduler)
+        return add(setScheduler(OwnRxBus.$().toObservable(eventType), scheduler).onBackpressureBuffer()
                 .subscribe(getObserver(tag,eventType,station,accidentReceiver,scheduler)), tag);
     }
 
