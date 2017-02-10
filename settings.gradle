@@ -1,1 +1,1 @@
-include ':example', ':OwnRxBus'
+include ':OwnRxBus-example', ':OwnRxBus'

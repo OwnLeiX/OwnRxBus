@@ -2,9 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/OwnLibraries.iml" filepath="$PROJECT_DIR$/OwnLibraries.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ORxBus.iml" filepath="$PROJECT_DIR$/ORxBus.iml" />
       <module fileurl="file://$PROJECT_DIR$/OwnRxBus/OwnRxBus.iml" filepath="$PROJECT_DIR$/OwnRxBus/OwnRxBus.iml" />
-      <module fileurl="file://$PROJECT_DIR$/example/example.iml" filepath="$PROJECT_DIR$/example/example.iml" />
+      <module fileurl="file://$PROJECT_DIR$/OwnRxBus-example/OwnRxBus-example.iml" filepath="$PROJECT_DIR$/OwnRxBus-example/OwnRxBus-example.iml" />
     </modules>
   </component>
 </project>
