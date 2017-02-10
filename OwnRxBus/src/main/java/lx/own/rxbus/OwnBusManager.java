@@ -27,7 +27,7 @@ public class OwnBusManager {
         public static final int io = 1 << 3;
     }
 
-    private Map<String, List<Subscription>> mSubscriptions;
+    private Map<Integer, List<Subscription>> mSubscriptions;
     private static OwnBusManager mInstance;
 
     public static OwnBusManager $() {
@@ -60,13 +60,13 @@ public class OwnBusManager {
         }
     }
 
-    private Subscription add(Subscription subscription, String tag) {
+    private Subscription add(Subscription subscription, int key) {
         if (subscription.isUnsubscribed())
             return subscription;
-        List<Subscription> subList = mSubscriptions.get(tag);
+        List<Subscription> subList = mSubscriptions.get(key);
         if (subList == null) {
             subList = new ArrayList<>();
-            mSubscriptions.put(tag, subList);
+            mSubscriptions.put(key, subList);
         }
         subList.add(subscription);
         return subscription;
@@ -76,42 +76,43 @@ public class OwnBusManager {
         OwnRxBus.$().post(event);
     }
 
-    public Subscription subscribe(String tag, OwnBusStation<Object> station) {
+    public Subscription subscribe(Object tag, OwnBusStation<Object> station) {
         return subscribe(tag, Object.class, station);
     }
 
-    public Subscription subscribe(String tag, OwnBusStation<Object> station, int scheduler) {
+    public Subscription subscribe(Object tag, OwnBusStation<Object> station, int scheduler) {
         return subscribe(tag, Object.class, station, scheduler);
     }
 
-    public <T> Subscription subscribe(String tag, Class<T> eventType, OwnBusStation<T> station) {
+    public <T> Subscription subscribe(Object tag, Class<T> eventType, OwnBusStation<T> station) {
         return subscribe(tag, eventType, station, OwnScheduler.usual);
     }
 
-    public <T> Subscription subscribe(String tag, Class<T> eventType, OwnBusStation<T> station, int scheduler) {
-        return subscribe(tag,eventType,station,null,scheduler);
+    public <T> Subscription subscribe(Object tag, Class<T> eventType, OwnBusStation<T> station, int scheduler) {
+        return subscribe(tag, eventType, station, null, scheduler);
     }
 
 
-    public <T> Subscription subscribe(String tag, OwnBusStation<Object> station, OwnAccident accidentReceiver) {
+    public <T> Subscription subscribe(Object tag, OwnBusStation<Object> station, OwnAccident accidentReceiver) {
         return subscribe(tag, Object.class, station, accidentReceiver);
     }
 
-    public <T> Subscription subscribe(String tag, OwnBusStation<Object> station, OwnAccident accidentReceiver, int scheduler) {
+    public <T> Subscription subscribe(Object tag, OwnBusStation<Object> station, OwnAccident accidentReceiver, int scheduler) {
         return subscribe(tag, Object.class, station, accidentReceiver, scheduler);
     }
 
-    public <T> Subscription subscribe(String tag, Class<T> eventType, OwnBusStation<T> station, OwnAccident accidentReceiver) {
+    public <T> Subscription subscribe(Object tag, Class<T> eventType, OwnBusStation<T> station, OwnAccident accidentReceiver) {
         return subscribe(tag, eventType, station, accidentReceiver, OwnScheduler.usual);
     }
 
-    public <T> Subscription subscribe(String tag, Class<T> eventType, OwnBusStation<T> station, OwnAccident accidentReceiver, int scheduler) {
-        checkNull(tag,eventType,station);
+    public <T> Subscription subscribe(Object tag, Class<T> eventType, OwnBusStation<T> station, OwnAccident accidentReceiver, int scheduler) {
+        checkNull(tag, eventType, station);
+        int key = tag.hashCode();
         return add(setScheduler(OwnRxBus.$().toObservable(eventType).onBackpressureBuffer(), scheduler)
-                .subscribe(getObserver(tag,eventType,station,accidentReceiver,scheduler)), tag);
+                .subscribe(getObserver(tag, eventType, station, accidentReceiver, scheduler)), key);
     }
 
-    private <T> void checkNull(String tag, Class<T> eventType, OwnBusStation<T> station) {
+    private <T> void checkNull(Object tag, Class<T> eventType, OwnBusStation<T> station) {
         if (tag == null)
             throw new IllegalArgumentException("Tag can not be null !");
         if (eventType == null)
@@ -120,11 +121,11 @@ public class OwnBusManager {
             throw new IllegalArgumentException("Station can not be null !");
     }
 
-    public <T> Subscription subscribe(CatchObserver<T> observer) {
-        return subscribe(observer.mTag,observer.mEventType,observer.mStation,observer.mAccidentReceiver,observer.mScheduler);
+    <T> Subscription subscribe(CatchObserver<T> observer) {
+        return subscribe(observer.mHashCodeKey, observer.mEventType, observer.mStation, observer.mAccidentReceiver, observer.mScheduler);
     }
 
-    private <T>CatchObserver<T> getObserver(String tag, Class<T> eventType, OwnBusStation<T> station, OwnAccident accidentReceiver, int scheduler) {
+    private <T> CatchObserver<T> getObserver(Object tag, Class<T> eventType, OwnBusStation<T> station, OwnAccident accidentReceiver, int scheduler) {
         return new CatchObserver.Builder<T>()
                 .station(station)
                 .receiver(accidentReceiver)
@@ -134,22 +135,28 @@ public class OwnBusManager {
                 .create();
     }
 
-    public void unsubscribeSingle(String tag, Subscription key) {
-        if (tag == null)
-            return;
-        List<Subscription> subList = mSubscriptions.get(tag);
-        if (subList == null)
-            return;
-        subList.remove(key);
-        if (!key.isUnsubscribed())
-            key.unsubscribe();
-    }
-
-    public OwnBusManager unsubscribe(String tag) {
+    public OwnBusManager unsubscribeSingle(Object tag, Subscription subscription) {
         if (tag == null)
             return this;
         synchronized (OwnBusManager.class) {
-            List<Subscription> subList = mSubscriptions.get(tag);
+            int key = tag.hashCode();
+            List<Subscription> subList = mSubscriptions.get(key);
+            if (subList == null)
+                return this;
+            if (subList.remove(subscription)) {
+                if (!subscription.isUnsubscribed())
+                    subscription.unsubscribe();
+            }
+        }
+        return this;
+    }
+
+    public OwnBusManager unsubscribe(Object tag) {
+        if (tag == null)
+            return this;
+        synchronized (OwnBusManager.class) {
+            int key = tag.hashCode();
+            List<Subscription> subList = mSubscriptions.get(key);
             if (subList == null)
                 return this;
             for (Subscription subscription : subList) {
@@ -157,7 +164,7 @@ public class OwnBusManager {
                     subscription.unsubscribe();
             }
             subList.clear();
-            mSubscriptions.remove(tag);
+            mSubscriptions.remove(key);
 
             return this;
         }
@@ -178,18 +185,18 @@ public class OwnBusManager {
      * 因为RxJava在onComplete()或者onError()后会自动unsubscribe()，所以强行try-catch异常，防止事件订阅被取消。
      * 在爆发性事件发生时候try catch异常，并且重新订阅自己，进行修复。
      */
-    public static class CatchObserver<T> extends Subscriber<T>{
+    public static class CatchObserver<T> extends Subscriber<T> {
 
         private OwnBusStation<T> mStation;
         private OwnAccident mAccidentReceiver;
-        private String mTag;
+        private int mHashCodeKey;
         private Class<T> mEventType;
         private int mScheduler;
 
-        public CatchObserver(OwnBusStation<T> station, OwnAccident receiver, String tag, Class<T> eventType, int scheduler) {
+        public CatchObserver(OwnBusStation<T> station, OwnAccident receiver, int hashCodeKey, Class<T> eventType, int scheduler) {
             this.mStation = station;
             this.mAccidentReceiver = receiver;
-            this.mTag = tag;
+            this.mHashCodeKey = hashCodeKey;
             this.mEventType = eventType;
             this.mScheduler = scheduler;
         }
@@ -221,14 +228,14 @@ public class OwnBusManager {
             request(1);
         }
 
-        public static class Builder<T>{
+        public static class Builder<T> {
             private OwnBusStation<T> mStation;
             private OwnAccident mAccidentReceiver;
-            private String mTag;
+            private Object mTag;
             private Class<T> mClass;
             private int mScheduler = -1;
 
-            public Builder(){
+            public Builder() {
 
             }
 
@@ -242,7 +249,7 @@ public class OwnBusManager {
                 return this;
             }
 
-            public Builder tag(String tag) {
+            public Builder tag(Object tag) {
                 this.mTag = tag;
                 return this;
             }
@@ -257,7 +264,7 @@ public class OwnBusManager {
                 return this;
             }
 
-            public CatchObserver<T> create(){
+            public CatchObserver<T> create() {
                 if (mTag == null)
                     throw new IllegalArgumentException("you must call the Builder.tag() before Builder.create() !");
                 if (mStation == null)
@@ -266,9 +273,8 @@ public class OwnBusManager {
                     throw new IllegalArgumentException("you must call the Builder.type() before Builder.create() !");
                 if (mScheduler == OwnScheduler.error)
                     throw new IllegalArgumentException("you must call the Builder.scheduler() before Builder.create() !");
-                return new CatchObserver<T>(mStation,mAccidentReceiver,mTag,mClass,mScheduler);
+                return new CatchObserver<>(mStation, mAccidentReceiver, mTag.hashCode(), mClass, mScheduler);
             }
-
 
 
         }
