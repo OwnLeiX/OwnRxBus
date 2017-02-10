@@ -50,10 +50,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * */
     @Override
     protected void onDestroy() {
-        OwnBusManager.$().unsubscribe(TAG_USUAL);
-        OwnBusManager.$().unsubscribe(TAG_IO);
-        OwnBusManager.$().unsubscribe(TAG_ASYNC);
-        OwnBusManager.$().unsubscribe(TAG_MAIN);
+        OwnBusManager.$().unsubscribe(this);
         super.onDestroy();
     }
 
@@ -157,7 +154,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initMainStation() {
-        OwnBusManager.$().subscribe(TAG_MAIN, MainThreadEvent.class, new OwnBusStation<MainThreadEvent>() {
+        OwnBusManager.$().subscribe(this, MainThreadEvent.class, new OwnBusStation<MainThreadEvent>() {
             @Override
             public void onBusStop(MainThreadEvent event) {
                 Log.wtf(TAG_MAIN, "Received:ThreadId:" + Thread.currentThread().getId() + "(" + event.type + ")" + event.message);
@@ -171,7 +168,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }, OwnBusManager.OwnScheduler.main);
 
-        OwnBusManager.$().subscribe(TAG_MAIN, NewThreadEvent.class, new OwnBusStation<NewThreadEvent>() {
+        OwnBusManager.$().subscribe(this, NewThreadEvent.class, new OwnBusStation<NewThreadEvent>() {
             @Override
             public void onBusStop(NewThreadEvent event) {
                 Log.wtf(TAG_MAIN, "Received:ThreadId:" + Thread.currentThread().getId() + "(" + event.type + ")" + event.message);
@@ -183,7 +180,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initIOStation() {
-        OwnBusManager.$().subscribe(TAG_IO, MainThreadEvent.class, new OwnBusStation<MainThreadEvent>() {
+        OwnBusManager.$().subscribe(this, MainThreadEvent.class, new OwnBusStation<MainThreadEvent>() {
             @Override
             public void onBusStop(MainThreadEvent event) {
                 Log.wtf(TAG_IO, "Received:ThreadId:" + Thread.currentThread().getId() + "(" + event.type + ")" + event.message);
@@ -191,7 +188,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }, OwnBusManager.OwnScheduler.io);
 
-        OwnBusManager.$().subscribe(TAG_IO, NewThreadEvent.class, new OwnBusStation<NewThreadEvent>() {
+        OwnBusManager.$().subscribe(this, NewThreadEvent.class, new OwnBusStation<NewThreadEvent>() {
             @Override
             public void onBusStop(NewThreadEvent event) {
                 Log.wtf(TAG_IO, "Received:ThreadId:" + Thread.currentThread().getId() + "(" + event.type + ")" + event.message);
@@ -201,7 +198,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initAsyncStation() {
-        OwnBusManager.$().subscribe(TAG_ASYNC, MainThreadEvent.class, new OwnBusStation<MainThreadEvent>() {
+        OwnBusManager.$().subscribe(this, MainThreadEvent.class, new OwnBusStation<MainThreadEvent>() {
             @Override
             public void onBusStop(MainThreadEvent event) {
                 Log.wtf(TAG_ASYNC, "Received:ThreadId:" + Thread.currentThread().getId() + "(" + event.type + ")" + event.message);
@@ -210,7 +207,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }, OwnBusManager.OwnScheduler.async);
 
-        OwnBusManager.$().subscribe(TAG_ASYNC, NewThreadEvent.class, new OwnBusStation<NewThreadEvent>() {
+        OwnBusManager.$().subscribe(this, NewThreadEvent.class, new OwnBusStation<NewThreadEvent>() {
             @Override
             public void onBusStop(NewThreadEvent event) {
                 Log.wtf(TAG_ASYNC, "Received:ThreadId:" + Thread.currentThread().getId() + "(" + event.type + ")" + event.message);
@@ -221,7 +218,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initUsualBus() {
-        OwnBusManager.$().subscribe(TAG_USUAL, MainThreadEvent.class, new OwnBusStation<MainThreadEvent>() {
+        OwnBusManager.$().subscribe(this, MainThreadEvent.class, new OwnBusStation<MainThreadEvent>() {
             @Override
             public void onBusStop(MainThreadEvent event) {
                 Log.wtf(TAG_USUAL, "Received:ThreadId:" + Thread.currentThread().getId() + "(" + event.type + ")" + event.message);
@@ -229,7 +226,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
 
-        OwnBusManager.$().subscribe(TAG_USUAL, NewThreadEvent.class, new OwnBusStation<NewThreadEvent>() {
+        OwnBusManager.$().subscribe(this, NewThreadEvent.class, new OwnBusStation<NewThreadEvent>() {
             @Override
             public void onBusStop(NewThreadEvent event) {
                 Log.wtf(TAG_USUAL, "Received:ThreadId:" + Thread.currentThread().getId() + "(" + event.type + ")" + event.message);
