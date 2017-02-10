@@ -30,6 +30,9 @@ public class OwnBusManager {
     private Map<Integer, List<Subscription>> mSubscriptions;
     private static OwnBusManager mInstance;
 
+    /**
+     * @return 获取OwnBusManager实例
+     */
     public static OwnBusManager $() {
         if (mInstance == null) {
             synchronized (OwnBusManager.class) {
@@ -76,35 +79,102 @@ public class OwnBusManager {
         OwnRxBus.$().post(event);
     }
 
+    /**
+     * <p>上车的方法</p><br/>
+     *
+     * @param tag     作为批量下车的标记，一般建议传入未重写Object.hashCode()的this。
+     * @param station 回调
+     * @return 车票，如果需要单人下车，请保存起来
+     */
     public Subscription subscribe(Object tag, OwnBusStation<Object> station) {
         return subscribe(tag, Object.class, station);
     }
 
+    /**
+     * <p>上车的方法</p><br/>
+     *
+     * @param tag       作为批量下车的标记，一般建议传入未重写Object.hashCode()的this。
+     * @param station   回调
+     * @param scheduler 想要在什么线程接收回调
+     * @return 车票，如果需要单人下车，请保存起来
+     */
     public Subscription subscribe(Object tag, OwnBusStation<Object> station, int scheduler) {
         return subscribe(tag, Object.class, station, scheduler);
     }
 
+    /**
+     * <p>上车的方法</p><br/>
+     *
+     * @param tag       作为批量下车的标记，一般建议传入未重写Object.hashCode()的this。
+     * @param eventType 关心的事件类型
+     * @param station   回调
+     * @return 车票，如果需要单人下车，请保存起来
+     */
     public <T> Subscription subscribe(Object tag, Class<T> eventType, OwnBusStation<T> station) {
         return subscribe(tag, eventType, station, OwnScheduler.usual);
     }
 
+    /**
+     * <p>上车的方法</p><br/>
+     *
+     * @param tag       作为批量下车的标记，一般建议传入未重写Object.hashCode()的this。
+     * @param eventType 关心的事件类型
+     * @param station   回调
+     * @param scheduler 想要在什么线程接收回调
+     * @return 车票，如果需要单人下车，请保存起来
+     */
     public <T> Subscription subscribe(Object tag, Class<T> eventType, OwnBusStation<T> station, int scheduler) {
         return subscribe(tag, eventType, station, null, scheduler);
     }
 
-
+    /**
+     * <p>上车的方法</p><br/>
+     *
+     * @param tag              作为批量下车的标记，一般建议传入未重写Object.hashCode()的this。
+     * @param station          回调
+     * @param accidentReceiver 不可预估的错误信息的回调
+     * @return 车票，如果需要单人下车，请保存起来
+     */
     public <T> Subscription subscribe(Object tag, OwnBusStation<Object> station, OwnAccident accidentReceiver) {
         return subscribe(tag, Object.class, station, accidentReceiver);
     }
 
+    /**
+     * <p>上车的方法</p><br/>
+     *
+     * @param tag              作为批量下车的标记，一般建议传入未重写Object.hashCode()的this。
+     * @param station          回调
+     * @param accidentReceiver 不可预估的错误信息的回调
+     * @param scheduler        想要在什么线程接收回调
+     * @return 车票，如果需要单人下车，请保存起来
+     */
     public <T> Subscription subscribe(Object tag, OwnBusStation<Object> station, OwnAccident accidentReceiver, int scheduler) {
         return subscribe(tag, Object.class, station, accidentReceiver, scheduler);
     }
 
+    /**
+     * <p>上车的方法</p><br/>
+     *
+     * @param tag              作为批量下车的标记，一般建议传入未重写Object.hashCode()的this。
+     * @param eventType        关心的事件类型
+     * @param station          回调
+     * @param accidentReceiver 不可预估的错误信息的回调
+     * @return 车票，如果需要单人下车，请保存起来
+     */
     public <T> Subscription subscribe(Object tag, Class<T> eventType, OwnBusStation<T> station, OwnAccident accidentReceiver) {
         return subscribe(tag, eventType, station, accidentReceiver, OwnScheduler.usual);
     }
 
+    /**
+     * <p>上车的方法</p><br/>
+     *
+     * @param tag              作为批量下车的标记，一般建议传入未重写Object.hashCode()的this。
+     * @param eventType        关心的事件类型
+     * @param station          回调
+     * @param accidentReceiver 不可预估的错误信息的回调
+     * @param scheduler        想要在什么线程接收回调
+     * @return 车票，如果需要单人下车，请保存起来
+     */
     public <T> Subscription subscribe(Object tag, Class<T> eventType, OwnBusStation<T> station, OwnAccident accidentReceiver, int scheduler) {
         checkNull(tag, eventType, station);
         int key = tag.hashCode();
@@ -135,6 +205,12 @@ public class OwnBusManager {
                 .create();
     }
 
+    /**
+     * <p>单人下车的方法</p><br/>
+     *
+     * @param tag          上车时传入的tag
+     * @param subscription 上车时候返回的Subscription
+     */
     public OwnBusManager unsubscribeSingle(Object tag, Subscription subscription) {
         if (tag == null)
             return this;
@@ -151,6 +227,11 @@ public class OwnBusManager {
         return this;
     }
 
+    /**
+     * <p>一起下车的方法</p><br/>
+     *
+     * @param tag 上车时传入的tag
+     */
     public OwnBusManager unsubscribe(Object tag) {
         if (tag == null)
             return this;
@@ -181,10 +262,6 @@ public class OwnBusManager {
         mSubscriptions.clear();
     }
 
-    /**
-     * 因为RxJava在onComplete()或者onError()后会自动unsubscribe()，所以强行try-catch异常，防止事件订阅被取消。
-     * 在爆发性事件发生时候try catch异常，并且重新订阅自己，进行修复。
-     */
     public static class CatchObserver<T> extends Subscriber<T> {
 
         private OwnBusStation<T> mStation;
