@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
 /**
@@ -49,7 +50,7 @@ public class OwnBusManager {
             case OwnScheduler.usual:
                 return observable;
             case OwnScheduler.main:
-                return observable.observeOn(Schedulers.immediate());
+                return observable.observeOn(AndroidSchedulers.mainThread());
             case OwnScheduler.async:
                 return observable.observeOn(Schedulers.newThread());
             case OwnScheduler.io:
@@ -144,7 +145,7 @@ public class OwnBusManager {
             key.unsubscribe();
     }
 
-    public OwnBusManager unsubscribeSelf(String tag) {
+    public OwnBusManager unsubscribe(String tag) {
         if (tag == null)
             return this;
         synchronized (OwnBusManager.class) {
@@ -202,7 +203,7 @@ public class OwnBusManager {
 //            e.printStackTrace();
             if (mAccidentReceiver != null)
                 mAccidentReceiver.onBusBreakDown(e);
-            OwnBusManager.$().unsubscribeSelf(mTag).subscribe(this);
+            OwnBusManager.$().unsubscribe(mTag).subscribe(this);
         }
 
         @Override

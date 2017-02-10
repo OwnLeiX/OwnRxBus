@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/ORxBus.iml" filepath="$PROJECT_DIR$/ORxBus.iml" />
-      <module fileurl="file://$PROJECT_DIR$/OwnRxBus/OwnRxBus.iml" filepath="$PROJECT_DIR$/OwnRxBus/OwnRxBus.iml" />
+      <module fileurl="file://$PROJECT_DIR$/OwnRxBus.iml" filepath="$PROJECT_DIR$/OwnRxBus.iml" />
+      <module fileurl="file://$PROJECT_DIR$/OwnRxBus/OwnRxBus-OwnRxBus.iml" filepath="$PROJECT_DIR$/OwnRxBus/OwnRxBus-OwnRxBus.iml" />
       <module fileurl="file://$PROJECT_DIR$/OwnRxBus-example/OwnRxBus-example.iml" filepath="$PROJECT_DIR$/OwnRxBus-example/OwnRxBus-example.iml" />
     </modules>
   </component>
