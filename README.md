@@ -1,4 +1,6 @@
 # OwnRxBus
 一款用RxJava实现的Bus
+
 内含example的module和library的module
+
 将library的module导入自己的工程即可
