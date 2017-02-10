@@ -9,10 +9,9 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import lx.own.event.AsyncEvent;
 import lx.own.event.MainThreadEvent;
 import lx.own.event.NewThreadEvent;
-import lx.own.rxbus.OwnBusAccident;
+import lx.own.rxbus.OwnAccident;
 import lx.own.rxbus.OwnBusManager;
 import lx.own.rxbus.OwnBusStation;
 
@@ -127,14 +126,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * 发送事件的方法
      * */
     private void sendEventAtMain() {
-        OwnBusManager.$().post(new AsyncEvent(-1));
+//        OwnBusManager.$().post(new AsyncEvent(-1));
         OwnBusManager.$().post(new MainThreadEvent(-1));
     }
 
     private void sendEventAtMain50() {
         for (int i = 1; i <= 50; i++) {
             OwnBusManager.$().post(new MainThreadEvent(i));
-            OwnBusManager.$().post(new AsyncEvent(i));
+//            OwnBusManager.$().post(new AsyncEvent(i));
         }
     }
 
@@ -165,9 +164,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 tv_mainResult.setText("Thread id:" + Thread.currentThread().getId() + "\n"
                         + event.type + event.message);
             }
-        }, new OwnBusAccident() {
+        }, new OwnAccident() {
             @Override
-            public void onBusBreakDown(Throwable error) {
+            public void onAccident(Throwable error) {
                 Toast.makeText(MainActivity.this,TAG_MAIN + ": break down!",Toast.LENGTH_SHORT).show();
             }
         }, OwnBusManager.OwnScheduler.main);
@@ -202,9 +201,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initAsyncStation() {
-        OwnBusManager.$().subscribe(TAG_ASYNC, AsyncEvent.class, new OwnBusStation<AsyncEvent>() {
+        OwnBusManager.$().subscribe(TAG_ASYNC, MainThreadEvent.class, new OwnBusStation<MainThreadEvent>() {
             @Override
-            public void onBusStop(AsyncEvent event) {
+            public void onBusStop(MainThreadEvent event) {
                 Log.wtf(TAG_ASYNC, "Received:ThreadId:" + Thread.currentThread().getId() + "(" + event.type + ")" + event.message);
                 SystemClock.sleep(1000);
 

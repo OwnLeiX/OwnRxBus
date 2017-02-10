@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import rx.Observable;
-import rx.Observer;
+import rx.Subscriber;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
@@ -93,21 +93,21 @@ public class OwnBusManager {
     }
 
 
-    public <T> Subscription subscribe(String tag, OwnBusStation<Object> station, OwnBusAccident accidentReceiver) {
+    public <T> Subscription subscribe(String tag, OwnBusStation<Object> station, OwnAccident accidentReceiver) {
         return subscribe(tag, Object.class, station, accidentReceiver);
     }
 
-    public <T> Subscription subscribe(String tag, OwnBusStation<Object> station, OwnBusAccident accidentReceiver, int scheduler) {
+    public <T> Subscription subscribe(String tag, OwnBusStation<Object> station, OwnAccident accidentReceiver, int scheduler) {
         return subscribe(tag, Object.class, station, accidentReceiver, scheduler);
     }
 
-    public <T> Subscription subscribe(String tag, Class<T> eventType, OwnBusStation<T> station, OwnBusAccident accidentReceiver) {
+    public <T> Subscription subscribe(String tag, Class<T> eventType, OwnBusStation<T> station, OwnAccident accidentReceiver) {
         return subscribe(tag, eventType, station, accidentReceiver, OwnScheduler.usual);
     }
 
-    public <T> Subscription subscribe(String tag, Class<T> eventType, OwnBusStation<T> station, OwnBusAccident accidentReceiver, int scheduler) {
+    public <T> Subscription subscribe(String tag, Class<T> eventType, OwnBusStation<T> station, OwnAccident accidentReceiver, int scheduler) {
         checkNull(tag,eventType,station);
-        return add(setScheduler(OwnRxBus.$().toObservable(eventType), scheduler).onBackpressureBuffer()
+        return add(setScheduler(OwnRxBus.$().toObservable(eventType).onBackpressureBuffer(), scheduler)
                 .subscribe(getObserver(tag,eventType,station,accidentReceiver,scheduler)), tag);
     }
 
@@ -124,7 +124,7 @@ public class OwnBusManager {
         return subscribe(observer.mTag,observer.mEventType,observer.mStation,observer.mAccidentReceiver,observer.mScheduler);
     }
 
-    private <T>CatchObserver<T> getObserver(String tag, Class<T> eventType, OwnBusStation<T> station, OwnBusAccident accidentReceiver, int scheduler) {
+    private <T>CatchObserver<T> getObserver(String tag, Class<T> eventType, OwnBusStation<T> station, OwnAccident accidentReceiver, int scheduler) {
         return new CatchObserver.Builder<T>()
                 .station(station)
                 .receiver(accidentReceiver)
@@ -178,20 +178,25 @@ public class OwnBusManager {
      * 因为RxJava在onComplete()或者onError()后会自动unsubscribe()，所以强行try-catch异常，防止事件订阅被取消。
      * 在爆发性事件发生时候try catch异常，并且重新订阅自己，进行修复。
      */
-    public static class CatchObserver<T> implements Observer<T> {
+    public static class CatchObserver<T> extends Subscriber<T>{
 
         private OwnBusStation<T> mStation;
-        private OwnBusAccident mAccidentReceiver;
+        private OwnAccident mAccidentReceiver;
         private String mTag;
         private Class<T> mEventType;
         private int mScheduler;
 
-        public CatchObserver(OwnBusStation<T> station, OwnBusAccident receiver, String tag, Class<T> eventType, int scheduler) {
+        public CatchObserver(OwnBusStation<T> station, OwnAccident receiver, String tag, Class<T> eventType, int scheduler) {
             this.mStation = station;
             this.mAccidentReceiver = receiver;
             this.mTag = tag;
             this.mEventType = eventType;
             this.mScheduler = scheduler;
+        }
+
+        @Override
+        public void onStart() {
+            request(1);
         }
 
         @Override
@@ -202,7 +207,7 @@ public class OwnBusManager {
         public void onError(Throwable e) {
 //            e.printStackTrace();
             if (mAccidentReceiver != null)
-                mAccidentReceiver.onBusBreakDown(e);
+                mAccidentReceiver.onAccident(e);
             OwnBusManager.$().subscribe(this);
         }
 
@@ -213,11 +218,12 @@ public class OwnBusManager {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            request(1);
         }
 
         public static class Builder<T>{
             private OwnBusStation<T> mStation;
-            private OwnBusAccident mAccidentReceiver;
+            private OwnAccident mAccidentReceiver;
             private String mTag;
             private Class<T> mClass;
             private int mScheduler = -1;
@@ -231,7 +237,7 @@ public class OwnBusManager {
                 return this;
             }
 
-            public Builder receiver(OwnBusAccident receiver) {
+            public Builder receiver(OwnAccident receiver) {
                 this.mAccidentReceiver = receiver;
                 return this;
             }

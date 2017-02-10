@@ -7,6 +7,6 @@ package lx.own.rxbus;
  * @date 2017/2/9
  */
 
-public interface OwnBusAccident {
-    void onBusBreakDown(Throwable error);
+public interface OwnAccident {
+    void onAccident(Throwable error);
 }
