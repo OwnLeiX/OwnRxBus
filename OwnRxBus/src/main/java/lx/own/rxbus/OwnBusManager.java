@@ -203,7 +203,7 @@ public class OwnBusManager {
 //            e.printStackTrace();
             if (mAccidentReceiver != null)
                 mAccidentReceiver.onBusBreakDown(e);
-            OwnBusManager.$().unsubscribe(mTag).subscribe(this);
+            OwnBusManager.$().subscribe(this);
         }
 
         @Override

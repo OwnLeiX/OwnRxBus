@@ -1,6 +1,7 @@
 package lx.own;
 
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -143,7 +144,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initMainStation() {
-        OwnBusManager.$().subscribe(TAG_ASYNC, MainThreadEvent.class, new OwnBusStation<MainThreadEvent>() {
+        OwnBusManager.$().subscribe(TAG_MAIN, MainThreadEvent.class, new OwnBusStation<MainThreadEvent>() {
             @Override
             public void onBusStop(MainThreadEvent event) {
                 Log.wtf(TAG_MAIN, "Received:ThreadId:" + Thread.currentThread().getId() + "(" + event.type + ")" + event.message);
@@ -152,7 +153,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }, OwnBusManager.OwnScheduler.main);
 
-        OwnBusManager.$().subscribe(TAG_ASYNC, NewThreadEvent.class, new OwnBusStation<NewThreadEvent>() {
+        OwnBusManager.$().subscribe(TAG_MAIN, NewThreadEvent.class, new OwnBusStation<NewThreadEvent>() {
             @Override
             public void onBusStop(NewThreadEvent event) {
                 Log.wtf(TAG_MAIN, "Received:ThreadId:" + Thread.currentThread().getId() + "(" + event.type + ")" + event.message);
@@ -168,6 +169,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onBusStop(MainThreadEvent event) {
                 Log.wtf(TAG_IO, "Received:ThreadId:" + Thread.currentThread().getId() + "(" + event.type + ")" + event.message);
+//                SystemClock.sleep(50);
             }
         }, OwnBusManager.OwnScheduler.io);
 
@@ -175,6 +177,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onBusStop(NewThreadEvent event) {
                 Log.wtf(TAG_IO, "Received:ThreadId:" + Thread.currentThread().getId() + "(" + event.type + ")" + event.message);
+//                SystemClock.sleep(50);
             }
         }, OwnBusManager.OwnScheduler.io);
     }
@@ -184,6 +187,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onBusStop(MainThreadEvent event) {
                 Log.wtf(TAG_ASYNC, "Received:ThreadId:" + Thread.currentThread().getId() + "(" + event.type + ")" + event.message);
+//                SystemClock.sleep(50);
 
             }
         }, OwnBusManager.OwnScheduler.async);
@@ -192,6 +196,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onBusStop(NewThreadEvent event) {
                 Log.wtf(TAG_ASYNC, "Received:ThreadId:" + Thread.currentThread().getId() + "(" + event.type + ")" + event.message);
+//                SystemClock.sleep(50);
             }
         }, OwnBusManager.OwnScheduler.async);
 
@@ -202,6 +207,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onBusStop(MainThreadEvent event) {
                 Log.wtf(TAG_USUAL, "Received:ThreadId:" + Thread.currentThread().getId() + "(" + event.type + ")" + event.message);
+                SystemClock.sleep(50);
             }
         });
 
@@ -209,6 +215,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onBusStop(NewThreadEvent event) {
                 Log.wtf(TAG_USUAL, "Received:ThreadId:" + Thread.currentThread().getId() + "(" + event.type + ")" + event.message);
+                SystemClock.sleep(50);
             }
         });
 
