@@ -9,6 +9,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import lx.own.event.AsyncEvent;
 import lx.own.event.MainThreadEvent;
 import lx.own.event.NewThreadEvent;
 import lx.own.rxbus.OwnBusAccident;
@@ -116,6 +117,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         new Thread() {
             @Override
             public void run() {
+//                OwnBusManager.$().post(new AsyncEvent(-1));
                 OwnBusManager.$().post(new NewThreadEvent(-1));
             }
         }.start();
@@ -125,12 +127,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * 发送事件的方法
      * */
     private void sendEventAtMain() {
+        OwnBusManager.$().post(new AsyncEvent(-1));
         OwnBusManager.$().post(new MainThreadEvent(-1));
     }
 
     private void sendEventAtMain50() {
         for (int i = 1; i <= 50; i++) {
             OwnBusManager.$().post(new MainThreadEvent(i));
+            OwnBusManager.$().post(new AsyncEvent(i));
         }
     }
 
@@ -138,8 +142,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         new Thread() {
             @Override
             public void run() {
+                final long id = Thread.currentThread().getId();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getApplicationContext(),"ThreadId: "+id,Toast.LENGTH_SHORT).show();
+                    }
+                });
                 for (int i = 1; i <= 50; i++) {
                     OwnBusManager.$().post(new NewThreadEvent(i));
+//                    OwnBusManager.$().post(new AsyncEvent(i));
                 }
             }
         }.start();
@@ -190,11 +202,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initAsyncStation() {
-        OwnBusManager.$().subscribe(TAG_ASYNC, MainThreadEvent.class, new OwnBusStation<MainThreadEvent>() {
+        OwnBusManager.$().subscribe(TAG_ASYNC, AsyncEvent.class, new OwnBusStation<AsyncEvent>() {
             @Override
-            public void onBusStop(MainThreadEvent event) {
+            public void onBusStop(AsyncEvent event) {
                 Log.wtf(TAG_ASYNC, "Received:ThreadId:" + Thread.currentThread().getId() + "(" + event.type + ")" + event.message);
-                SystemClock.sleep(50);
+                SystemClock.sleep(1000);
 
             }
         }, OwnBusManager.OwnScheduler.async);
@@ -203,7 +215,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onBusStop(NewThreadEvent event) {
                 Log.wtf(TAG_ASYNC, "Received:ThreadId:" + Thread.currentThread().getId() + "(" + event.type + ")" + event.message);
-                SystemClock.sleep(50);
+                SystemClock.sleep(1000);
             }
         }, OwnBusManager.OwnScheduler.async);
 

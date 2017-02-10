@@ -27,7 +27,7 @@ public class OwnRxBus {
         mStickyEventMap = new ConcurrentHashMap<>();
     }
 
-    public static OwnRxBus $() {
+    protected static OwnRxBus $() {
         if (mInstance == null) {
             synchronized (OwnRxBus.class) {
                 if (mInstance == null)
@@ -37,7 +37,7 @@ public class OwnRxBus {
         return mInstance;
     }
 
-    public static void destroy() {
+    protected static void destroy() {
         if (mInstance == null)
             return;
         mInstance.mBus.onCompleted();
@@ -45,7 +45,7 @@ public class OwnRxBus {
         mInstance = null;
     }
 
-    public static void reset() {
+    protected static void reset() {
         if (mInstance == null)
             return;
         mInstance.mBus.onCompleted();
@@ -55,7 +55,7 @@ public class OwnRxBus {
     /**
      * 发送事件
      */
-    public void post(Object event) {
+    protected void post(Object event) {
         mBus.onNext(event);
     }
 
@@ -70,7 +70,7 @@ public class OwnRxBus {
     /**
      * 根据传递的 eventType 类型返回特定类型(eventType)的 Observable
      */
-    public <T> Observable<T> toObservable(final Class<T> eventType) {
+    protected <T> Observable<T> toObservable(final Class<T> eventType) {
         return mBus.ofType(eventType);
     }
 
@@ -96,7 +96,7 @@ public class OwnRxBus {
     /**
      * 返回全类型的Observable
      */
-    public Observable<Object> toObservable() {
+    protected Observable<Object> toObservable() {
         return mBus;
     }
 
