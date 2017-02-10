@@ -7,9 +7,11 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import lx.own.event.MainThreadEvent;
 import lx.own.event.NewThreadEvent;
+import lx.own.rxbus.OwnBusAccident;
 import lx.own.rxbus.OwnBusManager;
 import lx.own.rxbus.OwnBusStation;
 
@@ -151,6 +153,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 tv_mainResult.setText("Thread id:" + Thread.currentThread().getId() + "\n"
                         + event.type + event.message);
             }
+        }, new OwnBusAccident() {
+            @Override
+            public void onBusBreakDown(Throwable error) {
+                Toast.makeText(MainActivity.this,TAG_MAIN + ": break down!",Toast.LENGTH_SHORT).show();
+            }
         }, OwnBusManager.OwnScheduler.main);
 
         OwnBusManager.$().subscribe(TAG_MAIN, NewThreadEvent.class, new OwnBusStation<NewThreadEvent>() {
@@ -169,7 +176,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onBusStop(MainThreadEvent event) {
                 Log.wtf(TAG_IO, "Received:ThreadId:" + Thread.currentThread().getId() + "(" + event.type + ")" + event.message);
-//                SystemClock.sleep(50);
+                SystemClock.sleep(50);
             }
         }, OwnBusManager.OwnScheduler.io);
 
@@ -177,7 +184,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onBusStop(NewThreadEvent event) {
                 Log.wtf(TAG_IO, "Received:ThreadId:" + Thread.currentThread().getId() + "(" + event.type + ")" + event.message);
-//                SystemClock.sleep(50);
+                SystemClock.sleep(50);
             }
         }, OwnBusManager.OwnScheduler.io);
     }
@@ -187,7 +194,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onBusStop(MainThreadEvent event) {
                 Log.wtf(TAG_ASYNC, "Received:ThreadId:" + Thread.currentThread().getId() + "(" + event.type + ")" + event.message);
-//                SystemClock.sleep(50);
+                SystemClock.sleep(50);
 
             }
         }, OwnBusManager.OwnScheduler.async);
@@ -196,7 +203,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onBusStop(NewThreadEvent event) {
                 Log.wtf(TAG_ASYNC, "Received:ThreadId:" + Thread.currentThread().getId() + "(" + event.type + ")" + event.message);
-//                SystemClock.sleep(50);
+                SystemClock.sleep(50);
             }
         }, OwnBusManager.OwnScheduler.async);
 
