@@ -15,23 +15,23 @@ import rx.subjects.SerializedSubject;
  * @date 2017/2/6
  */
 
-public class OwnRxBus {
+public class OwnRxCore {
 
-    private static OwnRxBus mInstance;
+    private static OwnRxCore mInstance;
 
     private final rx.subjects.Subject<Object, Object> mBus;
     private final Map<Class<?>, Object> mStickyEventMap;
 
-    private OwnRxBus() {
+    private OwnRxCore() {
         mBus = new SerializedSubject<>(PublishSubject.create());
         mStickyEventMap = new ConcurrentHashMap<>();
     }
 
-    protected static OwnRxBus $() {
+    protected static OwnRxCore $() {
         if (mInstance == null) {
-            synchronized (OwnRxBus.class) {
+            synchronized (OwnRxCore.class) {
                 if (mInstance == null)
-                    mInstance = new OwnRxBus();
+                    mInstance = new OwnRxCore();
             }
         }
         return mInstance;

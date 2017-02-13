@@ -18,8 +18,8 @@ import rx.schedulers.Schedulers;
  * @date 2017/2/6
  */
 
-public class OwnBusManager {
-    public static class OwnScheduler {
+public class OwnBus {
+    public static class BusRoute {
         public static final int error = -1;
         public static final int usual = 1;
         public static final int main = 1 << 1;
@@ -27,159 +27,160 @@ public class OwnBusManager {
         public static final int io = 1 << 3;
     }
 
-    private Map<Integer, List<Subscription>> mSubscriptions;
-    private static OwnBusManager mInstance;
+    private Map<String, List<Subscription>> mSubscriptions;
+    private static OwnBus mInstance;
 
     /**
      * @return 获取OwnBusManager实例
      */
-    public static OwnBusManager $() {
+    public static OwnBus $() {
         if (mInstance == null) {
-            synchronized (OwnBusManager.class) {
+            synchronized (OwnBus.class) {
                 if (mInstance == null)
-                    mInstance = new OwnBusManager();
+                    mInstance = new OwnBus();
             }
         }
         return mInstance;
     }
 
-    private OwnBusManager() {
+    private OwnBus() {
         mSubscriptions = new ConcurrentHashMap<>(4);
     }
 
 
     private <T> Observable<T> setScheduler(Observable<T> observable, int scheduler) {
         switch (scheduler) {
-            case OwnScheduler.usual:
+            case BusRoute.usual:
                 return observable;
-            case OwnScheduler.main:
+            case BusRoute.main:
                 return observable.observeOn(AndroidSchedulers.mainThread());
-            case OwnScheduler.async:
+            case BusRoute.async:
                 return observable.observeOn(Schedulers.newThread());
-            case OwnScheduler.io:
+            case BusRoute.io:
                 return observable.observeOn(Schedulers.io());
             default:
-                throw new IllegalArgumentException("If you want use the scheduler, Please use the arguments in OwnScheduler.class . ");
+                throw new IllegalArgumentException("If you want use the scheduler, Please use the arguments in BusRoute.class . ");
         }
     }
 
-    private Subscription add(Subscription subscription, int key) {
+    private Subscription add(Subscription subscription, String tag) {
         if (subscription.isUnsubscribed())
             return subscription;
-        List<Subscription> subList = mSubscriptions.get(key);
+        List<Subscription> subList = mSubscriptions.get(tag);
         if (subList == null) {
             subList = new ArrayList<>();
-            mSubscriptions.put(key, subList);
+            mSubscriptions.put(tag, subList);
         }
         subList.add(subscription);
         return subscription;
     }
 
-    public synchronized void post(Object event) {
-        OwnRxBus.$().post(event);
+    public synchronized void take(Object event) {
+        OwnRxCore.$().post(event);
     }
 
     /**
      * <p>上车的方法</p><br/>
      *
-     * @param tag     作为批量下车的标记，一般建议传入未重写Object.hashCode()的this。
+     * @param tag              作为Station的标记
      * @param station 回调
-     * @return 车票，如果需要单人下车，请保存起来
+     * @return 取消单个站台时所需的Subscription
      */
-    public Subscription subscribe(Object tag, OwnBusStation<Object> station) {
-        return subscribe(tag, Object.class, station);
+    public Subscription newStation(String tag, OwnBusStation<Object> station) {
+        return newStation(tag, Object.class, station);
     }
 
     /**
      * <p>上车的方法</p><br/>
      *
-     * @param tag       作为批量下车的标记，一般建议传入未重写Object.hashCode()的this。
+     * @param tag              作为Station的标记
      * @param station   回调
      * @param scheduler 想要在什么线程接收回调
-     * @return 车票，如果需要单人下车，请保存起来
+     * @return 取消单个站台时所需的Subscription
      */
-    public Subscription subscribe(Object tag, OwnBusStation<Object> station, int scheduler) {
-        return subscribe(tag, Object.class, station, scheduler);
+    public Subscription newStation(String tag, OwnBusStation<Object> station, int scheduler) {
+        return newStation(tag, Object.class, station, scheduler);
     }
 
     /**
      * <p>上车的方法</p><br/>
      *
-     * @param tag       作为批量下车的标记，一般建议传入未重写Object.hashCode()的this。
+     * @param tag              作为Station的标记
      * @param eventType 关心的事件类型
      * @param station   回调
-     * @return 车票，如果需要单人下车，请保存起来
+     * @return 取消单个站台时所需的Subscription
      */
-    public <T> Subscription subscribe(Object tag, Class<T> eventType, OwnBusStation<T> station) {
-        return subscribe(tag, eventType, station, OwnScheduler.usual);
+    public <T> Subscription newStation(String tag, Class<T> eventType, OwnBusStation<T> station) {
+        return newStation(tag, eventType, station, BusRoute.usual);
     }
 
     /**
      * <p>上车的方法</p><br/>
      *
-     * @param tag       作为批量下车的标记，一般建议传入未重写Object.hashCode()的this。
+     * @param tag              作为Station的标记
      * @param eventType 关心的事件类型
      * @param station   回调
      * @param scheduler 想要在什么线程接收回调
-     * @return 车票，如果需要单人下车，请保存起来
+     * @return 取消单个站台时所需的Subscription
      */
-    public <T> Subscription subscribe(Object tag, Class<T> eventType, OwnBusStation<T> station, int scheduler) {
-        return subscribe(tag, eventType, station, null, scheduler);
+    public <T> Subscription newStation(String tag, Class<T> eventType, OwnBusStation<T> station, int scheduler) {
+        return newStation(tag, eventType, station, null, scheduler);
     }
 
     /**
      * <p>上车的方法</p><br/>
      *
-     * @param tag              作为批量下车的标记，一般建议传入未重写Object.hashCode()的this。
+     * @param tag              作为Station的标记
      * @param station          回调
      * @param accidentReceiver 不可预估的错误信息的回调
-     * @return 车票，如果需要单人下车，请保存起来
+     * @return 取消单个站台时所需的Subscription
      */
-    public <T> Subscription subscribe(Object tag, OwnBusStation<Object> station, OwnAccident accidentReceiver) {
-        return subscribe(tag, Object.class, station, accidentReceiver);
+    public <T> Subscription newStation(String tag, OwnBusStation<Object> station, OwnAccident accidentReceiver) {
+        return newStation(tag, Object.class, station, accidentReceiver);
     }
 
     /**
      * <p>上车的方法</p><br/>
      *
-     * @param tag              作为批量下车的标记，一般建议传入未重写Object.hashCode()的this。
+     * @param tag              作为Station的标记
      * @param station          回调
      * @param accidentReceiver 不可预估的错误信息的回调
      * @param scheduler        想要在什么线程接收回调
-     * @return 车票，如果需要单人下车，请保存起来
+     * @return 取消单个站台时所需的Subscription
      */
-    public <T> Subscription subscribe(Object tag, OwnBusStation<Object> station, OwnAccident accidentReceiver, int scheduler) {
-        return subscribe(tag, Object.class, station, accidentReceiver, scheduler);
+    public <T> Subscription newStation(String tag, OwnBusStation<Object> station, OwnAccident accidentReceiver, int scheduler) {
+        return newStation(tag, Object.class, station, accidentReceiver, scheduler);
     }
 
     /**
      * <p>上车的方法</p><br/>
      *
-     * @param tag              作为批量下车的标记，一般建议传入未重写Object.hashCode()的this。
+     * @param tag              作为Station的标记
      * @param eventType        关心的事件类型
      * @param station          回调
      * @param accidentReceiver 不可预估的错误信息的回调
-     * @return 车票，如果需要单人下车，请保存起来
+     * @return 取消单个站台时所需的Subscription
      */
-    public <T> Subscription subscribe(Object tag, Class<T> eventType, OwnBusStation<T> station, OwnAccident accidentReceiver) {
-        return subscribe(tag, eventType, station, accidentReceiver, OwnScheduler.usual);
+    public <T> Subscription newStation(String tag, Class<T> eventType, OwnBusStation<T> station, OwnAccident accidentReceiver) {
+        return newStation(tag, eventType, station, accidentReceiver, BusRoute.usual);
     }
 
     /**
      * <p>上车的方法</p><br/>
      *
-     * @param tag              作为批量下车的标记，一般建议传入未重写Object.hashCode()的this。
+     * @param tag              作为Station的标记
      * @param eventType        关心的事件类型
      * @param station          回调
      * @param accidentReceiver 不可预估的错误信息的回调
      * @param scheduler        想要在什么线程接收回调
-     * @return 车票，如果需要单人下车，请保存起来
+     * @return 取消单个站台时所需的Subscription
      */
-    public <T> Subscription subscribe(Object tag, Class<T> eventType, OwnBusStation<T> station, OwnAccident accidentReceiver, int scheduler) {
+    public <T> Subscription newStation(String tag, Class<T> eventType, OwnBusStation<T> station, OwnAccident accidentReceiver, int scheduler) {
         checkNull(tag, eventType, station);
-        int key = tag.hashCode();
-        return add(setScheduler(OwnRxBus.$().toObservable(eventType).onBackpressureBuffer(), scheduler)
-                .subscribe(getObserver(tag, eventType, station, accidentReceiver, scheduler)), key);
+        return add(setScheduler(OwnRxCore.$()
+                .toObservable(eventType)
+                .onBackpressureBuffer(), scheduler)
+                .subscribe(getSubscriber(tag, eventType, station, accidentReceiver, scheduler)), tag);
     }
 
     private <T> void checkNull(Object tag, Class<T> eventType, OwnBusStation<T> station) {
@@ -191,11 +192,11 @@ public class OwnBusManager {
             throw new IllegalArgumentException("Station can not be null !");
     }
 
-    <T> Subscription subscribe(CatchObserver<T> observer) {
-        return subscribe(observer.mHashCodeKey, observer.mEventType, observer.mStation, observer.mAccidentReceiver, observer.mScheduler);
+    private <T> Subscription restoreStation(CatchObserver<T> observer) {
+        return newStation(observer.mTag, observer.mEventType, observer.mStation, observer.mAccidentReceiver, observer.mScheduler);
     }
 
-    private <T> CatchObserver<T> getObserver(Object tag, Class<T> eventType, OwnBusStation<T> station, OwnAccident accidentReceiver, int scheduler) {
+    private <T> CatchObserver<T> getSubscriber(String tag, Class<T> eventType, OwnBusStation<T> station, OwnAccident accidentReceiver, int scheduler) {
         return new CatchObserver.Builder<T>()
                 .station(station)
                 .receiver(accidentReceiver)
@@ -208,15 +209,14 @@ public class OwnBusManager {
     /**
      * <p>单人下车的方法</p><br/>
      *
-     * @param tag          上车时传入的tag
-     * @param subscription 上车时候返回的Subscription
+     * @param tag          建立Station时传入的tag
+     * @param subscription 建立时候返回的Subscription
      */
-    public OwnBusManager unsubscribeSingle(Object tag, Subscription subscription) {
+    public OwnBus abandonStation(String tag, Subscription subscription) {
         if (tag == null)
             return this;
-        synchronized (OwnBusManager.class) {
-            int key = tag.hashCode();
-            List<Subscription> subList = mSubscriptions.get(key);
+        synchronized (OwnBus.class) {
+            List<Subscription> subList = mSubscriptions.get(tag);
             if (subList == null)
                 return this;
             if (subList.remove(subscription)) {
@@ -230,14 +230,13 @@ public class OwnBusManager {
     /**
      * <p>一起下车的方法</p><br/>
      *
-     * @param tag 上车时传入的tag
+     * @param tag 建立Station时传入的tag
      */
-    public OwnBusManager unsubscribe(Object tag) {
+    public OwnBus abandonStations(String tag) {
         if (tag == null)
             return this;
-        synchronized (OwnBusManager.class) {
-            int key = tag.hashCode();
-            List<Subscription> subList = mSubscriptions.get(key);
+        synchronized (OwnBus.class) {
+            List<Subscription> subList = mSubscriptions.get(tag);
             if (subList == null)
                 return this;
             for (Subscription subscription : subList) {
@@ -245,7 +244,7 @@ public class OwnBusManager {
                     subscription.unsubscribe();
             }
             subList.clear();
-            mSubscriptions.remove(key);
+            mSubscriptions.remove(tag);
 
             return this;
         }
@@ -266,14 +265,14 @@ public class OwnBusManager {
 
         private OwnBusStation<T> mStation;
         private OwnAccident mAccidentReceiver;
-        private int mHashCodeKey;
+        private String mTag;
         private Class<T> mEventType;
         private int mScheduler;
 
-        public CatchObserver(OwnBusStation<T> station, OwnAccident receiver, int hashCodeKey, Class<T> eventType, int scheduler) {
+        public CatchObserver(OwnBusStation<T> station, OwnAccident receiver, String tag, Class<T> eventType, int scheduler) {
             this.mStation = station;
             this.mAccidentReceiver = receiver;
-            this.mHashCodeKey = hashCodeKey;
+            this.mTag = tag;
             this.mEventType = eventType;
             this.mScheduler = scheduler;
         }
@@ -292,7 +291,7 @@ public class OwnBusManager {
 //            e.printStackTrace();
             if (mAccidentReceiver != null)
                 mAccidentReceiver.onAccident(e);
-            OwnBusManager.$().subscribe(this);
+            OwnBus.$().restoreStation(this);
         }
 
         @Override
@@ -308,7 +307,7 @@ public class OwnBusManager {
         public static class Builder<T> {
             private OwnBusStation<T> mStation;
             private OwnAccident mAccidentReceiver;
-            private Object mTag;
+            private String mTag;
             private Class<T> mClass;
             private int mScheduler = -1;
 
@@ -326,7 +325,7 @@ public class OwnBusManager {
                 return this;
             }
 
-            public Builder tag(Object tag) {
+            public Builder tag(String tag) {
                 this.mTag = tag;
                 return this;
             }
@@ -348,9 +347,9 @@ public class OwnBusManager {
                     throw new IllegalArgumentException("you must call the Builder.station() before Builder.create() !");
                 if (mClass == null)
                     throw new IllegalArgumentException("you must call the Builder.type() before Builder.create() !");
-                if (mScheduler == OwnScheduler.error)
+                if (mScheduler == BusRoute.error)
                     throw new IllegalArgumentException("you must call the Builder.scheduler() before Builder.create() !");
-                return new CatchObserver<>(mStation, mAccidentReceiver, mTag.hashCode(), mClass, mScheduler);
+                return new CatchObserver<>(mStation, mAccidentReceiver, mTag, mClass, mScheduler);
             }
 
 
